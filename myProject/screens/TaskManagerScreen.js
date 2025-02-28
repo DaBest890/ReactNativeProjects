@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Button, Image, TouchableOpacity } from 'react-native';
+import { View, Text, Button, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import LottieView from 'lottie-react-native'; // Import the correct Lottie package
 import { ProgressBar } from 'react-native-paper';
 
@@ -61,16 +61,17 @@ export default function TaskManagerScreen() {
 
       {/* Confetti Animation */}
       {showConfetti && (
-        <View style={{ alignItems: 'center', marginTop: 20 }}>
-          <Text style={{ fontSize: 18, color: 'green' }}>Congratulations! You’ve completed all tasks!</Text>
-          <LottieView
-            source={require('../assets/confetti/animations/confetti.json')}
-            autoPlay
-            loop
-            style={{ width: 150, height: 150, marginTop: 10 }}
-          />
-        </View>
-      )}
+        <LottieView
+          source={require('../assets/confetti/animations/confetti.json')}
+          autoPlay
+          loop
+         speed={1.5}
+          resizeMode="cover"
+         style={styles.confetti}
+       />
+)}
+
+
 
       {/* Badge Display 
       {badgeUnlocked && (
@@ -87,3 +88,51 @@ export default function TaskManagerScreen() {
     </View>
   );
 }
+
+// **Place the styles BELOW the component**
+const styles = StyleSheet.create({
+  container: {
+    padding: 20,
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  taskContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 5,
+  },
+  taskButton: {
+    padding: 10,
+    borderRadius: 5,
+    marginRight: 10,
+  },
+  taskButtonText: {
+    color: 'white',
+  },
+  confetti: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    top: 150,
+    left: 0,
+    transform: [{ scale: 1.5 }], // Make confetti feel like it's bursting out
+  },
+  badgeContainer: {
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  badgeText: {
+    fontSize: 18,
+    color: 'blue',
+  },
+  badgeImage: {
+    width: 100,
+    height: 100,
+    marginTop: 10,
+  },
+});
+
