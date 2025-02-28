@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, Button, ProgressBarAndroid, CheckBox, Image } from 'react-native';
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';  // For .lottie files
+import { View, Text, Button, Image, TouchableOpacity } from 'react-native';
+import LottieView from 'lottie-react-native'; // Import the correct Lottie package
+import { ProgressBar } from 'react-native-paper';
 
 export default function TaskManagerScreen() {
   const totalTasks = 5;
@@ -8,31 +9,29 @@ export default function TaskManagerScreen() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [badgeUnlocked, setBadgeUnlocked] = useState(false);
 
-  const tasks = [
+  const [tasks, setTasks] = useState([
     { task: 'Do homework', completed: false },
     { task: 'Clean room', completed: false },
     { task: 'Read for 10 minutes', completed: false },
     { task: 'Walk the dog', completed: false },
     { task: 'Exercise for 15 minutes', completed: false }
-  ];
+  ]);
 
   const handleCompletion = (index) => {
     let newTasks = [...tasks];
-    newTasks[index].completed = !newTasks[index].completed;
-    setCompletedTasks(newTasks.filter(task => task.completed).length);
-    
-    // Show confetti when all tasks are completed
-    if (completedTasks + 1 === totalTasks) {
-      setShowConfetti(true);
-    }
+    if (!newTasks[index].completed) {
+      newTasks[index].completed = true;
+      const newCompletedCount = completedTasks + 1;
+      setCompletedTasks(newCompletedCount);
 
-    // Unlock the badge when all tasks are done
-    if (completedTasks + 1 >= totalTasks) {
-      setBadgeUnlocked(true);
+      if (newCompletedCount === totalTasks) {
+        setShowConfetti(true);
+        setBadgeUnlocked(true);
+      }
     }
+    setTasks(newTasks);
   };
 
-  // Manually trigger confetti for testing
   const triggerConfetti = () => {
     setShowConfetti(true);
   };
@@ -40,63 +39,51 @@ export default function TaskManagerScreen() {
   return (
     <View style={{ padding: 20 }}>
       <Text style={{ fontSize: 24, fontWeight: 'bold' }}>Task Manager</Text>
-
-      {/* Progress Bar */}
-      <ProgressBarAndroid
-        styleAttr="Horizontal"
-        indeterminate={false}
-        progress={completedTasks / totalTasks}
-      />
+      <ProgressBar progress={totalTasks > 0 ? completedTasks / totalTasks : 0} />
       <Text>{completedTasks}/{totalTasks} tasks completed</Text>
 
-      {/* Task List */}
       {tasks.map((task, index) => (
         <View key={index} style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 5 }}>
-          <CheckBox
-            value={task.completed}
-            onValueChange={() => handleCompletion(index)}
-          />
-          <Text style={{ marginLeft: 10 }}>{task.task}</Text>
+          <TouchableOpacity
+            onPress={() => handleCompletion(index)}
+            style={{
+              backgroundColor: task.completed ? 'gray' : 'blue',
+              padding: 10,
+              borderRadius: 5,
+              marginRight: 10,
+            }}
+          >
+            <Text style={{ color: 'white' }}>{task.completed ? 'Done' : 'Complete'}</Text>
+          </TouchableOpacity>
+          <Text>{task.task}</Text>
         </View>
       ))}
 
-      {/* Show Confetti when All Tasks are Completed */}
+      {/* Confetti Animation */}
       {showConfetti && (
         <View style={{ alignItems: 'center', marginTop: 20 }}>
           <Text style={{ fontSize: 18, color: 'green' }}>Congratulations! You’ve completed all tasks!</Text>
-          <DotLottieReact
-            src={require('../assets/confetti.lottie')}  // Path to your .lottie file
+          <LottieView
+            source={require('../assets/confetti/animations/confetti.json')}
+            autoPlay
             loop
-            autoplay
-            style={{ width: 150, height: 150, marginTop: 10 }}  // Adjust size as needed
+            style={{ width: 150, height: 150, marginTop: 10 }}
           />
         </View>
       )}
 
-      {/* Show Badge when Unlocked */}
+      {/* Badge Display 
       {badgeUnlocked && (
         <View style={{ alignItems: 'center', marginTop: 20 }}>
           <Text style={{ fontSize: 18, color: 'blue' }}>You’ve unlocked the "Super Achiever" badge!</Text>
           <Image
-            source={require('../assets/badge.png')} // Use a badge image or alternative
+            source={require('../assets/badge.png')}
             style={{ width: 100, height: 100, marginTop: 10 }}
           />
         </View>
       )}
-
-      {/* Button to Add Tasks */}
-      <Button
-        title="Complete Task"
-        onPress={() => setCompletedTasks(completedTasks + 1)}
-        style={{ marginTop: 20 }}
-      />
-
-      {/* Button to Trigger Confetti for Testing */}
-      <Button
-        title="Trigger Confetti"
-        onPress={triggerConfetti}
-        style={{ marginTop: 20 }}
-      />
+        */}
+      <Button title="Trigger Confetti" onPress={triggerConfetti} style={{ marginTop: 20 }} />
     </View>
   );
 }
