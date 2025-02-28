@@ -12,7 +12,9 @@ const ProfileScreen = () => {
       
       {/* User Name */}
       <Text style={styles.userName}>Maximo Obra Winfield</Text>
-      
+      <Text>Edit this screen in ProfileScreen.js!</Text>
+
+
       {/* User Bio */}
       <Text style={styles.bio}>
         Software Developer | Tech Enthusiast | Lifelong Learner

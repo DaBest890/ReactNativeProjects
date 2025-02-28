@@ -5,6 +5,7 @@ const HomeScreen = () => {
   return (
     <View style={styles.container}>
       <Text>Home Screen</Text>
+      <Text>Edit this screen in HomeScreen.js!</Text>
     </View>
   );
 };

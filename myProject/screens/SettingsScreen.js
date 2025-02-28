@@ -5,6 +5,7 @@ const SettingsScreen = () => {
   return (
     <View style={styles.container}>
       <Text>Settings Screen</Text>
+      <Text>Edit this screen in SettingsScreen.js!</Text>
     </View>
   );
 };
