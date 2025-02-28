@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, Button, ProgressBarAndroid, CheckBox, Image } from 'react-native';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';  // For .lottie files
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';  // For .lottie files
 
 export default function TaskManagerScreen() {
   const totalTasks = 5;
