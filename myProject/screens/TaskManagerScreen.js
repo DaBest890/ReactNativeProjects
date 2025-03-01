@@ -13,8 +13,9 @@ export default function TaskManagerScreen() {
     { task: 'Do homework', completed: false },
     { task: 'Clean room', completed: false },
     { task: 'Read for 10 minutes', completed: false },
-    { task: 'Walk the dog', completed: false },
-    { task: 'Exercise for 15 minutes', completed: false }
+    { task: 'Play with Penelope', completed: false },
+    { task: 'Leave Penelope alone', completed: false },
+    { task: 'Jujitsu', completed: false }
   ]);
 
   const handleCompletion = (index) => {
