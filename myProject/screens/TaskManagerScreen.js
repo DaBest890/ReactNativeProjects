@@ -7,7 +7,7 @@ import {useContext} from 'react'; // Allowing us to use context
 import {CurrencyContext} from '../context/CurrencyContext'; // Importing CurrencyContext here
 
 export default function TaskManagerScreen() {
-  const { currency, rewardCurrency } = useContext(CurrencyContext); // Use global currency
+  const { currency, rewardCurrency, spendCurrency, resetCurrency } = useContext(CurrencyContext); // Use global currency
   const totalTasks = 5;
   
   
@@ -110,7 +110,7 @@ export default function TaskManagerScreen() {
   };
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, justifyContent: 'flex-end', alignItems: 'center', paddingBottom: 20 }}> {/*Parent view */}
       {confettiLoop && (
         <View style={styles.clearButtonContainer} pointerEvents="auto">
           <TouchableOpacity style={styles.clearButton} onPress={stopConfetti}>
@@ -122,9 +122,17 @@ export default function TaskManagerScreen() {
         <View style={styles.currencyContainer}>
           <Text style={styles.currencyText}>Currency: {currency}</Text>
         </View>
-        <Text style={{ fontSize: 24, fontWeight: 'bold' }}>Tasks</Text>
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity style={styles.taskButtonIncomplete} onPress={() => spendCurrency(10)}>
+              <Text style={styles.taskButtonText}>Spend 10 Currency</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.taskButtonIncomplete} onPress={resetCurrency}>
+              <Text style={styles.taskButtonText}>Reset Currency</Text>
+            </TouchableOpacity>
+        </View>
+        <Text style={{ fontSize: 24, fontWeight: 'bold', paddingHorizontal: 20 }}>Tasks</Text>
         <ProgressBar progress={totalTasks > 0 ? completedTasks / totalTasks : 0} />
-        <Text>{completedTasks}/{totalTasks} tasks completed</Text>
+        <Text style={{ paddingHorizontal: 20 }}>{completedTasks}/{totalTasks} tasks completed</Text>
         {tasks.map((task, index) => (
           <View key={index} style={styles.taskContainer}>
             <TouchableOpacity
@@ -155,6 +163,24 @@ export default function TaskManagerScreen() {
 }
 
 const styles = StyleSheet.create({
+  taskContainer: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    justifyContent: 'space-between', //Seperates text from button
+    marginBottom: 15, // Adds spacing between tasks
+    marginRight: 40,
+    width: '100%'
+  },
+  buttonContainer: {
+    position: 'absolute',
+    bottom: 0, // Adjust to move up/down
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 30,
+  },
   currencyContainer: {
     alignItems: 'center',
     marginBottom: 10,
@@ -166,14 +192,14 @@ const styles = StyleSheet.create({
   },
   taskButtonCompleted: {
     backgroundColor: '#4CAF50',
-    padding: 12,
+    padding: 15,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
   taskButtonIncomplete: {
     backgroundColor: '#2196F3',
-    padding: 12,
+    padding: 15,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
@@ -187,6 +213,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginLeft: 10,
     color: '#333',
+    flex: 1
   },
   confetti: {
     position: 'absolute',
