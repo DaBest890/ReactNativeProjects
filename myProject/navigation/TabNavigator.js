@@ -17,24 +17,40 @@ const TabNavigator = () => {
      <NavigationContainer>
         <Tab.Navigator
           screenOptions={({ route }) => ({
-           tabBarIcon: ({ color, size }) => {
-             const iconMap = {
-                Home: "home",
-               Settings: "settings",
-                Profile: "person-circle",
-                "Task Manager": "list", // Using the 'list' icon for Task Manager
-             };
+          // Define the icon for each tab based on the route name.
+            tabBarIcon: ({ color, size }) => {
+            // Map each route to a specific Ionicons icon name.
+              const iconMap = {
+                Home: "home",               // Home screen icon
+                Settings: "settings",       // Settings screen icon
+                Profile: "person-circle",   // Profile screen icon
+                "Task Manager": "list",     // Task Manager screen icon (using 'list' icon)
+              };
 
-             return <Ionicons name={iconMap[route.name] || "help-circle"} size={size} color={color} />;
-          },
-           tabBarActiveTintColor: 'blue',
+              // Return an Ionicons component with the mapped icon name,
+              // falling back to 'help-circle' if the route name isn't found in iconMap.
+              return <Ionicons name={iconMap[route.name] || "help-circle"} size={size} color={color} />;
+            },
+            // Set the tint color for the active tab icons.
+            tabBarActiveTintColor: 'blue',
+            // Set the tint color for the inactive tab icons.
             tabBarInactiveTintColor: 'gray',
-          })}
-        >
+
+            // ------------------- Header Options for All Screens -------------------
+            // Center the header title for each screen.
+            headerTitleAlign: 'center',
+            // Set the header's background color.
+            headerStyle: { backgroundColor: '#f2f2f2' },
+            // Customize the header title's style (bold font and larger size).
+            headerTitleStyle: { fontWeight: 'bold', fontSize: 24 },
+            // Set the color for header elements such as the back button.
+            headerTintColor: '#000',
+          })}>
+
          <Tab.Screen name="Home" component={HomeScreen} />
          <Tab.Screen name="Settings" component={SettingsScreen} />
          <Tab.Screen name="Profile" component={ProfileScreen} />
-         <Tab.Screen name="Task Manager" component={TaskManagerScreen} />
+         <Tab.Screen name="Task Manager" component={TaskManagerScreen}/>
        </Tab.Navigator>
      </NavigationContainer>
     </CurrencyProvider>

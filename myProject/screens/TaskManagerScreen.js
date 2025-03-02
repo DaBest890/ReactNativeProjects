@@ -6,6 +6,7 @@ import { Audio } from 'expo-av';
 import { useContext } from 'react';
 import { CurrencyContext } from '../context/CurrencyContext';
 import GlobalStyles from '../styles/GlobalStyles'; // Reusable global styles
+import { Platform } from 'react-native';
 
 export default function TaskManagerScreen() {
   const { currency, rewardCurrency, spendCurrency, resetCurrency } = useContext(CurrencyContext);
@@ -147,10 +148,11 @@ export default function TaskManagerScreen() {
       <View style={{ flex: 1 }}>
         {/* Currency Display */}
         <View style={localStyles.currencyContainer}>
-          <Text style={GlobalStyles.text}>Currency: {currency}</Text>
+          <Text style={localStyles.currencyText}>Currency: {currency}</Text>
         </View>
           {/* Spend / Reset Currency Buttons */}
- {/* {__DEV__ &&( //WORKING ON THIS
+          {/*
+  {__DEV__ &&( //WORKING ON THIS
         <View style={localStyles.buttonContainer}>
           <TouchableOpacity style={GlobalStyles.button} onPress={() => spendCurrency(10)}>
             <Text style={GlobalStyles.buttonText}>Buy New Game</Text>
@@ -229,8 +231,13 @@ const localStyles = StyleSheet.create({
     marginBottom: 15,
   },
   taskText: {
-    marginLeft: 10,
-    flex: 1,
+    fontSize: 20,
+    color: '#333',
+  },
+  currencyText: {
+    fontSize: 50,
+    color: '#333',
+    fontFamily: 'DynaPuff-Bold', //Custom font for currency text
   },
   confetti: {
     position: 'absolute',

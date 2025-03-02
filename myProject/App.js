@@ -1,19 +1,28 @@
-import React from 'react'
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
-import 'react-native-gesture-handler';
+import React, { useState } from 'react';
+import AppLoading from 'expo-app-loading';
+import * as Font from 'expo-font';
 import TabNavigator from './navigation/TabNavigator';
+
+const fetchFonts = () => {
+  return Font.loadAsync({
+    // Map a font name to a font file in your assets folder
+    'DynaPuff-Bold': require('./assets/fonts/DynaPuff,Montserrat/DynaPuff/static/DynaPuff-Bold.ttf'),
+  });
+};
 
 
 export default function App() {
+  const [fontsLoaded, setFontsLoaded] = useState(false);
+
+  if (!fontsLoaded) {
+    return (
+      <AppLoading 
+        startAsync={fetchFonts}
+        onFinish={() => setFontsLoaded(true)}
+        onError={console.warn}
+      />
+    );
+  }
+  
   return <TabNavigator />;
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
