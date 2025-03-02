@@ -8,6 +8,7 @@ import ProfileScreen from '../screens/ProfileScreen';
 import TaskManagerScreen from '../screens/TaskManagerScreen';
 import { CurrencyProvider } from '../context/CurrencyContext';
 
+
 const Tab = createBottomTabNavigator();
 
 const TabNavigator = () => {

@@ -1,21 +1,15 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
+import GlobalStyles from '../styles/GlobalStyles'; // Correctly imported GlobalStyles
 
-const SettingsScreen = () => {
+export default function SettingsScreen() {
   return (
-    <View style={styles.container}>
-      <Text>Settings Screen</Text>
-      <Text>Edit this screen in SettingsScreen.js!</Text>
+    <View style={GlobalStyles.container}> {/* Applying container style from GlobalStyles */}
+      <Text style={GlobalStyles.title}>Welcome to the New Screen</Text> {/* Applying title style */}
+      <Text style={GlobalStyles.text}>This is a new screen with global styles applied.</Text> {/* Applying text style */}
+      <TouchableOpacity style={GlobalStyles.button}>
+        <Text style={GlobalStyles.buttonText}>Press Me</Text> {/* Applying button style */}
+      </TouchableOpacity>
     </View>
   );
-};
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-});
-
-export default SettingsScreen;
+}

@@ -3,19 +3,19 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import LottieView from 'lottie-react-native';
 import { ProgressBar } from 'react-native-paper';
 import { Audio } from 'expo-av';
-import {useContext} from 'react'; // Allowing us to use context
-import {CurrencyContext} from '../context/CurrencyContext'; // Importing CurrencyContext here
+import { useContext } from 'react';
+import { CurrencyContext } from '../context/CurrencyContext';
+import GlobalStyles from '../styles/GlobalStyles'; // Reusable global styles
 
 export default function TaskManagerScreen() {
-  const { currency, rewardCurrency, spendCurrency, resetCurrency } = useContext(CurrencyContext); // Use global currency
+  const { currency, rewardCurrency, spendCurrency, resetCurrency } = useContext(CurrencyContext);
   const totalTasks = 5;
-  
-  
+
   const [completedTasks, setCompletedTasks] = useState(0);
   const [showConfetti, setShowConfetti] = useState(false);
   const [confettiLoop, setConfettiLoop] = useState(false);
-  const [badgeUnlocked, setBadgeUnlocked] = useState(false);
   const [confettiKey, setConfettiKey] = useState(0);
+
   const taskCompleteSound = useRef(null);
 
   const [tasks, setTasks] = useState([
@@ -24,9 +24,12 @@ export default function TaskManagerScreen() {
     { task: 'Read for 10 minutes', completed: false },
     { task: 'Play with Penelope', completed: false },
     { task: 'Leave Penelope alone', completed: false },
-    { task: 'Jujitsu', completed: false }
+    { task: 'Jujitsu', completed: false },
   ]);
 
+  // =======================
+  //   AUDIO SETUP (MP3)
+  // =======================
   useEffect(() => {
     async function setupAudio() {
       try {
@@ -35,185 +38,199 @@ export default function TaskManagerScreen() {
           playsInSilentModeIOS: true,
           shouldDuckAndroid: false,
           staysActiveInBackground: true,
-          playThroughEarpieceAndroid: false 
+          playThroughEarpieceAndroid: false,
         });
-  
+
+        // Unload any previously loaded sound
         if (taskCompleteSound.current) {
-          await taskCompleteSound.current.unloadAsync(); // Ensure old sound is removed
+          await taskCompleteSound.current.unloadAsync();
         }
-  
+
+        // Load the task completion sound
         taskCompleteSound.current = new Audio.Sound();
         await taskCompleteSound.current.loadAsync(
           require('../assets/sounds/TaskComplete.mp3'),
           { shouldPlay: false }
         );
-        console.log("Sound loaded and audio mode set");
+        console.log('Sound loaded and audio mode set');
       } catch (error) {
-        console.error("Error setting up audio:", error);
+        console.error('Error setting up audio:', error);
       }
     }
-  
     setupAudio();
-  
-  return () => {
+
+    // Cleanup on unmount
+    return () => {
       if (taskCompleteSound.current) {
-        taskCompleteSound.current.unloadAsync(); // Unload sound to prevent issues
+        taskCompleteSound.current.unloadAsync();
       }
     };
   }, []);
-  
-  
 
+  // =======================
+  //   PLAY COMPLETION SOUND
+  // =======================
   const playCompletionSound = async () => {
     if (taskCompleteSound.current) {
       try {
-        await taskCompleteSound.current.setPositionAsync(0); // Force start
-        await taskCompleteSound.current.playAsync(); // Explicitly play
-        console.log("Sound played successfully");
-  
-        const newStatus = await taskCompleteSound.current.getStatusAsync();
-        console.log("Sound status after playing:", newStatus);
+        await taskCompleteSound.current.setPositionAsync(0);
+        await taskCompleteSound.current.playAsync();
+        console.log('Sound played successfully');
       } catch (error) {
-        console.error("Error playing sound:", error);
+        console.error('Error playing sound:', error);
       }
     }
   };
-  
-  
-  
-  
 
+  // =======================
+  //   HANDLE TASK COMPLETION
+  // =======================
   const handleCompletion = (index) => {
     setTasks((prevTasks) => {
-      const newTasks = prevTasks.map((task, i) =>
-        i === index ? { ...task, completed: !task.completed } : task
+      const newTasks = prevTasks.map((t, i) =>
+        i === index ? { ...t, completed: !t.completed } : t
       );
-      const newCompletedCount = newTasks.filter(task => task.completed).length;
+      const newCompletedCount = newTasks.filter((t) => t.completed).length;
+
+      // Update the completed task count
       setCompletedTasks(newCompletedCount);
+
+      // Reward currency if a task was newly completed
       if (newCompletedCount > completedTasks) {
-        rewardCurrency(); // Grant currency reward for completing a task
+        rewardCurrency();
       }
+
+      // Play sound
       playCompletionSound();
-      setShowConfetti(false);
-      setTimeout(() => {
-        setShowConfetti(true);
-        setConfettiKey(prevKey => prevKey + 1);
-        setConfettiLoop(newCompletedCount >= totalTasks);
-      }, 100);
+
+      // Confetti logic
+      setShowConfetti(false); // Hide any active confetti
+        setConfettiKey((prevKey) => prevKey + 1);
+
+        if (newCompletedCount < totalTasks) {
+          // Not all tasks done -> play confetti once
+          setConfettiLoop(false);
+          setShowConfetti(true);
+
+        } else {
+          // All tasks complete -> loop confetti
+          setConfettiLoop(true);
+          setShowConfetti(true);
+        }
+
       return newTasks;
     });
   };
 
+  // =======================
+  //   STOP CONFETTI
+  // =======================
   const stopConfetti = () => {
     setShowConfetti(false);
     setConfettiLoop(false);
   };
 
+  // =======================
+  //   RENDER
+  // =======================
   return (
-    <View style={{ flex: 1, justifyContent: 'flex-end', alignItems: 'center', paddingBottom: 20 }}> {/*Parent view */}
+    <View style={GlobalStyles.container}>
+      {/* X Button: shown only when confetti is looping (all tasks done) */}
       {confettiLoop && (
-        <View style={styles.clearButtonContainer} pointerEvents="auto">
-          <TouchableOpacity style={styles.clearButton} onPress={stopConfetti}>
-            <Text style={styles.clearButtonText}>X</Text>
+        <View style={localStyles.clearButtonContainer} pointerEvents="auto">
+          <TouchableOpacity style={localStyles.clearButton} onPress={stopConfetti}>
+            <Text style={GlobalStyles.buttonText}>X</Text>
           </TouchableOpacity>
         </View>
       )}
-      <View style={{ flex: 1, padding: 20 }}>
-        <View style={styles.currencyContainer}>
-          <Text style={styles.currencyText}>Currency: {currency}</Text>
+
+      <View style={{ flex: 1 }}>
+        {/* Currency Display */}
+        <View style={localStyles.currencyContainer}>
+          <Text style={GlobalStyles.text}>Currency: {currency}</Text>
         </View>
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.taskButtonIncomplete} onPress={() => spendCurrency(10)}>
-              <Text style={styles.taskButtonText}>Spend 10 Currency</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.taskButtonIncomplete} onPress={resetCurrency}>
-              <Text style={styles.taskButtonText}>Reset Currency</Text>
-            </TouchableOpacity>
+          {/* Spend / Reset Currency Buttons */}
+ {/* {__DEV__ &&( //WORKING ON THIS
+        <View style={localStyles.buttonContainer}>
+          <TouchableOpacity style={GlobalStyles.button} onPress={() => spendCurrency(10)}>
+            <Text style={GlobalStyles.buttonText}>Buy New Game</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={GlobalStyles.button} onPress={resetCurrency}>
+            <Text style={GlobalStyles.buttonText}>Reset Currency</Text>
+          </TouchableOpacity>
         </View>
-        <Text style={{ fontSize: 24, fontWeight: 'bold', paddingHorizontal: 20 }}>Tasks</Text>
+            )}
+            */}
+        {/* Task Progress */}
+        <Text style={[GlobalStyles.text, localStyles.title]}>Tasks</Text>
         <ProgressBar progress={totalTasks > 0 ? completedTasks / totalTasks : 0} />
-        <Text style={{ paddingHorizontal: 20 }}>{completedTasks}/{totalTasks} tasks completed</Text>
+        <Text style={GlobalStyles.text}>
+          {completedTasks}/{totalTasks} tasks completed
+        </Text>
+
+        {/* Task List */}
         {tasks.map((task, index) => (
-          <View key={index} style={styles.taskContainer}>
+          <View key={index} style={localStyles.taskContainer}>
             <TouchableOpacity
               onPress={() => handleCompletion(index)}
-              style={[styles.taskButton, task.completed ? styles.taskButtonCompleted : styles.taskButtonIncomplete]}
+              style={GlobalStyles.button}
             >
-              <Text style={styles.taskButtonText}>{task.completed ? '✔ Done' : '➤ Complete'}</Text>
+              <Text style={GlobalStyles.buttonText}>
+                {task.completed ? '✔ Done' : '➤ Complete'}
+              </Text>
             </TouchableOpacity>
-            <Text style={styles.taskText}>{task.task}</Text>
+            <Text style={[GlobalStyles.text, localStyles.taskText]}>{task.task}</Text>
           </View>
         ))}
       </View>
-      {(showConfetti) && (
-        <View style={styles.confettiContainer} pointerEvents="none">
+
+      {/* Confetti Animation */}
+      {showConfetti && (
+        <View style={localStyles.confettiContainer} pointerEvents="none">
           <LottieView
             key={confettiKey}
-            source={require('../assets/confetti/animations/confetti.json')}
+            source={require('../assets/confetti/animations/confetti.json')} // Ensure path is correct
             autoPlay
             loop={confettiLoop}
             speed={1.5}
             resizeMode="cover"
-            style={styles.confetti}
+            style={localStyles.confetti}
           />
         </View>
       )}
     </View>
   );
-}
+};
 
-const styles = StyleSheet.create({
-  taskContainer: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
-    justifyContent: 'space-between', //Seperates text from button
-    marginBottom: 15, // Adds spacing between tasks
-    marginRight: 40,
-    width: '100%'
-  },
-  buttonContainer: {
-    position: 'absolute',
-    bottom: 0, // Adjust to move up/down
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 30,
-  },
+// =======================
+//   LOCAL STYLES
+// =======================
+const localStyles = StyleSheet.create({
   currencyContainer: {
     alignItems: 'center',
     marginBottom: 10,
   },
-  currencyText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  taskButtonCompleted: {
-    backgroundColor: '#4CAF50',
-    padding: 15,
-    borderRadius: 8,
-    alignItems: 'center',
+  buttonContainer: {
+    flexDirection: 'row',
     justifyContent: 'center',
-  },
-  taskButtonIncomplete: {
-    backgroundColor: '#2196F3',
-    padding: 15,
-    borderRadius: 8,
     alignItems: 'center',
-    justifyContent: 'center',
+    marginVertical: 10,
+    gap: 30,
   },
-  taskButtonText: {
-    color: 'white',
-    fontSize: 16,
+  title: {
+    fontSize: 24,
     fontWeight: 'bold',
+    marginVertical: 10,
+  },
+  taskContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 15,
   },
   taskText: {
-    fontSize: 16,
     marginLeft: 10,
-    color: '#333',
-    flex: 1
+    flex: 1,
   },
   confetti: {
     position: 'absolute',
@@ -235,9 +252,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  clearButtonText: {
-    color: 'white',
-    fontSize: 20,
-    fontWeight: 'bold',
-  }
+  clearButton: {
+    // Optionally apply a style here, or rely on GlobalStyles.buttonText for text styling
+  },
 });
