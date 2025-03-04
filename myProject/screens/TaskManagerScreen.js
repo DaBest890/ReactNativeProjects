@@ -152,7 +152,7 @@ export default function TaskManagerScreen() {
         </View>
           {/* Spend / Reset Currency Buttons */}
 
-  {__DEV__ &&( //WORKING ON THIS
+  {/*{__DEV__ &&( //WORKING ON THIS
         <View style={localStyles.buttonContainer}>
           <TouchableOpacity style={GlobalStyles.button} onPress={() => spendCurrency(10)}>
             <Text style={GlobalStyles.buttonText}>Buy New Game</Text>
@@ -162,7 +162,7 @@ export default function TaskManagerScreen() {
           </TouchableOpacity>
         </View>
             )}
-
+*/}
         {/* Task Progress */}
         <Text style={[GlobalStyles.text, localStyles.title]}>Tasks</Text>
         <ProgressBar progress={totalTasks > 0 ? completedTasks / totalTasks : 0} />

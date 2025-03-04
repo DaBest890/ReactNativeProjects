@@ -36,8 +36,9 @@ const HomeScreen = () => {
         </TouchableOpacity>
 
       </View>
-
+   {/*  {__DEV__ && (
       <View style={styles.resetButtonContainer}>
+
       <TouchableOpacity 
           style={GlobalStyles.button} 
           onPress={resetCurrency}
@@ -45,6 +46,8 @@ const HomeScreen = () => {
           <Text style={GlobalStyles.buttonText}>Reset</Text>
         </TouchableOpacity>
         </View>
+    )}
+    */}
       
       {/* Additional blocks can be added here. For instance, you could add buttons, images, or other components */}
     </View>
