@@ -27,20 +27,48 @@ export function CurrencyProvider({ children }) {
     loadBaselineCurrency();
   }, []);
 
-  // This function rewards currency and updates the current value.
-  // It also updates the baseline (savedCurrency) so that the reset reverts to this new value.
+  // DAILY RESET CHECK using server time (World Time API)
+  useEffect(() => {
+    const checkDailyReset = async () => {
+      try {
+        // Fetch the current UTC time from a public API
+        const response = await fetch("http://worldtimeapi.org/api/timezone/Etc/UTC");
+        const data = await response.json();
+        const serverTime = new Date(data.datetime);
+        const today = serverTime.toDateString();
+
+        // Get the last reset date from AsyncStorage
+        const lastResetDate = await AsyncStorage.getItem('lastResetDate');
+        if (lastResetDate !== today) {
+          // It's a new day – reset currency to the baseline value.
+          const savedCurrency = await AsyncStorage.getItem('savedCurrency');
+          const baseline = savedCurrency !== null ? JSON.parse(savedCurrency) : 0;
+          setCurrency(baseline);
+          // Also update the current currency storage key.
+          await AsyncStorage.setItem('currency', JSON.stringify(baseline));
+          // Update the stored reset date to today
+          await AsyncStorage.setItem('lastResetDate', today);
+        }
+      } catch (error) {
+        console.error('Error during daily reset check:', error);
+      }
+    };
+
+    checkDailyReset();
+  }, []);
+
+  // This function rewards currency and updates the current value only.
+  // It does NOT update the baseline ("savedCurrency").
   const rewardCurrency = () => {
     setCurrency(prevCurrency => {
       const newCurrency = prevCurrency + (10 * multiplier);
-      // Update both the current currency and the baseline
+      // Update only the current currency value
       AsyncStorage.setItem('currency', JSON.stringify(newCurrency));
-      AsyncStorage.setItem('savedCurrency', JSON.stringify(newCurrency));
       return newCurrency;
     });
   };
 
   // This function spends currency and updates the current value only.
-  // It does NOT update the saved baseline.
   const spendCurrency = (amount) => {
     setCurrency(prevCurrency => {
       const newCurrency = Math.max(0, prevCurrency - amount);
@@ -49,14 +77,12 @@ export function CurrencyProvider({ children }) {
     });
   };
 
-  // Updated resetCurrency: reverts to the last known (baseline) currency value.
+  // resetCurrency: reverts to the baseline value stored under "savedCurrency".
   const resetCurrency = async () => {
     try {
-      // Retrieve the baseline currency from AsyncStorage using the 'savedCurrency' key
       const savedCurrency = await AsyncStorage.getItem('savedCurrency');
       const baselineCurrency = savedCurrency !== null ? JSON.parse(savedCurrency) : 0;
       setCurrency(baselineCurrency);
-      // Optionally update the 'currency' key as well
       AsyncStorage.setItem('currency', JSON.stringify(baselineCurrency));
     } catch (error) {
       console.error('Error resetting currency:', error);
@@ -68,8 +94,8 @@ export function CurrencyProvider({ children }) {
     setMultiplier(value);
   };
 
-  // Optionally, a helper function to update the baseline value manually.
-  // For example, after a level up, you might want to "save" the current currency as the new baseline.
+  // Helper function to update the baseline value manually.
+  // Call this when you want to "lock in" a new baseline.
   const saveCurrencyAsBaseline = async () => {
     try {
       await AsyncStorage.setItem('savedCurrency', JSON.stringify(currency));

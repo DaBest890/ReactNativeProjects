@@ -1,14 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import LottieView from 'lottie-react-native';
 import { ProgressBar } from 'react-native-paper';
 import { Audio } from 'expo-av';
-import { useContext } from 'react';
 import { CurrencyContext } from '../context/CurrencyContext';
-import GlobalStyles from '../styles/GlobalStyles'; // Reusable global styles
-import { Platform } from 'react-native';
+import GlobalStyles from '../styles/GlobalStyles';
 
-export default function TaskManagerScreen() {
+export function TaskManagerScreen() {
   const { currency, rewardCurrency, spendCurrency, resetCurrency } = useContext(CurrencyContext);
   const totalTasks = 5;
 
@@ -16,9 +14,6 @@ export default function TaskManagerScreen() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [confettiLoop, setConfettiLoop] = useState(false);
   const [confettiKey, setConfettiKey] = useState(0);
-
-  const taskCompleteSound = useRef(null);
-
   const [tasks, setTasks] = useState([
     { task: 'Do homework', completed: false },
     { task: 'Clean room', completed: false },
@@ -28,8 +23,13 @@ export default function TaskManagerScreen() {
     { task: 'Jujitsu', completed: false },
   ]);
 
+  const taskCompleteSound = useRef(null);
+
+  // Removed the daily reset check from TaskManagerScreen.
+  // Currency reset is handled in CurrencyContext globally.
+
   // =======================
-  //   AUDIO SETUP (MP3)
+  // AUDIO SETUP (MP3)
   // =======================
   useEffect(() => {
     async function setupAudio() {
@@ -41,16 +41,13 @@ export default function TaskManagerScreen() {
           staysActiveInBackground: true,
           playThroughEarpieceAndroid: false,
         });
-
-        // Unload any previously loaded sound
         if (taskCompleteSound.current) {
           await taskCompleteSound.current.unloadAsync();
         }
-
-        // Load the task completion sound
         taskCompleteSound.current = new Audio.Sound();
         await taskCompleteSound.current.loadAsync(
           require('../assets/sounds/TaskComplete.mp3'),
+          require('../assets/sounds/cashregisterpurchase.mp3'),
           { shouldPlay: false }
         );
         console.log('Sound loaded and audio mode set');
@@ -59,8 +56,6 @@ export default function TaskManagerScreen() {
       }
     }
     setupAudio();
-
-    // Cleanup on unmount
     return () => {
       if (taskCompleteSound.current) {
         taskCompleteSound.current.unloadAsync();
@@ -68,9 +63,6 @@ export default function TaskManagerScreen() {
     };
   }, []);
 
-  // =======================
-  //   PLAY COMPLETION SOUND
-  // =======================
   const playCompletionSound = async () => {
     if (taskCompleteSound.current) {
       try {
@@ -84,59 +76,48 @@ export default function TaskManagerScreen() {
   };
 
   // =======================
-  //   HANDLE TASK COMPLETION
+  // HANDLE TASK COMPLETION (One-Way)
   // =======================
   const handleCompletion = (index) => {
     setTasks((prevTasks) => {
+      // Only mark the task as completed if it's not already completed
+      if (prevTasks[index].completed) return prevTasks;
       const newTasks = prevTasks.map((t, i) =>
-        i === index ? { ...t, completed: !t.completed } : t
+        i === index ? { ...t, completed: true } : t
       );
       const newCompletedCount = newTasks.filter((t) => t.completed).length;
-
-      // Update the completed task count
       setCompletedTasks(newCompletedCount);
-
-      // Reward currency if a task was newly completed
-      if (newCompletedCount > completedTasks) {
-        rewardCurrency();
-      }
-
-      // Play sound
+      // Reward currency only once per task completion
+      rewardCurrency();
       playCompletionSound();
-
-      // Confetti logic
-      setShowConfetti(false); // Hide any active confetti
-        setConfettiKey((prevKey) => prevKey + 1);
-
-        if (newCompletedCount < totalTasks) {
-          // Not all tasks done -> play confetti once
-          setConfettiLoop(false);
-          setShowConfetti(true);
-
-        } else {
-          // All tasks complete -> loop confetti
-          setConfettiLoop(true);
-          setShowConfetti(true);
-        }
-
+      setShowConfetti(false);
+      setConfettiKey((prevKey) => prevKey + 1);
+      if (newCompletedCount < totalTasks) {
+        setConfettiLoop(false);
+        setShowConfetti(true);
+      } else {
+        setConfettiLoop(true);
+        setShowConfetti(true);
+      }
       return newTasks;
     });
   };
 
-  // =======================
-  //   STOP CONFETTI
-  // =======================
   const stopConfetti = () => {
     setShowConfetti(false);
     setConfettiLoop(false);
   };
 
-  // =======================
-  //   RENDER
-  // =======================
+  // Optionally, you can include a manual reset for tasks only
+  // This does not reset currency, since currency reset is handled globally.
+  const resetDailyTasks = () => {
+    const resetTasks = tasks.map(task => ({ ...task, completed: false }));
+    setTasks(resetTasks);
+    setCompletedTasks(0);
+  };
+
   return (
     <View style={GlobalStyles.container}>
-      {/* X Button: shown only when confetti is looping (all tasks done) */}
       {confettiLoop && (
         <View style={localStyles.clearButtonContainer} pointerEvents="auto">
           <TouchableOpacity style={localStyles.clearButton} onPress={stopConfetti}>
@@ -144,33 +125,24 @@ export default function TaskManagerScreen() {
           </TouchableOpacity>
         </View>
       )}
-
       <View style={{ flex: 1 }}>
-        {/* Currency Display */}
         <View style={localStyles.currencyContainer}>
-          <Text style={localStyles.currencyText}>Currency: {currency}</Text>
+          <Text style={localStyles.currencyText}>Dad Dollars: {currency}</Text>
         </View>
-          {/* Spend / Reset Currency Buttons */}
 
-  {/*{__DEV__ &&( //WORKING ON THIS
-        <View style={localStyles.buttonContainer}>
-          <TouchableOpacity style={GlobalStyles.button} onPress={() => spendCurrency(10)}>
-            <Text style={GlobalStyles.buttonText}>Buy New Game</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={GlobalStyles.button} onPress={resetCurrency}>
-            <Text style={GlobalStyles.buttonText}>Reset Currency</Text>
-          </TouchableOpacity>
-        </View>
-            )}
-*/}
-        {/* Task Progress */}
+        {/* Optional manual reset button for daily tasks */}
+        {__DEV__ && (
+          <View style={localStyles.buttonContainer}>
+            <TouchableOpacity style={GlobalStyles.button} onPress={resetDailyTasks}>
+              <Text style={GlobalStyles.buttonText}>Reset Daily Tasks</Text>
+            </TouchableOpacity>
+          </View>
+        )}
         <Text style={[GlobalStyles.text, localStyles.title]}>Tasks</Text>
         <ProgressBar progress={totalTasks > 0 ? completedTasks / totalTasks : 0} />
         <Text style={GlobalStyles.text}>
           {completedTasks}/{totalTasks} tasks completed
         </Text>
-
-        {/* Task List */}
         {tasks.map((task, index) => (
           <View key={index} style={localStyles.taskContainer}>
             <TouchableOpacity
@@ -185,13 +157,11 @@ export default function TaskManagerScreen() {
           </View>
         ))}
       </View>
-
-      {/* Confetti Animation */}
       {showConfetti && (
         <View style={localStyles.confettiContainer} pointerEvents="none">
           <LottieView
             key={confettiKey}
-            source={require('../assets/confetti/animations/confetti.json')} // Ensure path is correct
+            source={require('../assets/confetti/animations/confetti.json')}
             autoPlay
             loop={confettiLoop}
             speed={1.5}
@@ -202,11 +172,8 @@ export default function TaskManagerScreen() {
       )}
     </View>
   );
-};
+}
 
-// =======================
-//   LOCAL STYLES
-// =======================
 const localStyles = StyleSheet.create({
   currencyContainer: {
     alignItems: 'center',
@@ -235,9 +202,9 @@ const localStyles = StyleSheet.create({
     color: '#333',
   },
   currencyText: {
-    fontSize: 50,
+    fontSize: 40,
     color: '#333',
-    fontFamily: 'DynaPuff-Bold', //Custom font for currency text
+    fontFamily: 'DynaPuff-Bold',
   },
   confetti: {
     position: 'absolute',
@@ -259,7 +226,7 @@ const localStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  clearButton: {
-    // Optionally apply a style here, or rely on GlobalStyles.buttonText for text styling
-  },
+  clearButton: {},
 });
+
+export default TaskManagerScreen;

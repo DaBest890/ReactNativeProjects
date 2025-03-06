@@ -1,55 +1,153 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useState, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-// Import global reusable styles
+import LottieView from 'lottie-react-native';
 import GlobalStyles from '../styles/GlobalStyles';
 import { CurrencyContext } from '../context/CurrencyContext';
-
+import { Audio } from 'expo-av'; // For audio sounds
 
 // ==================================================================
 // HomeScreen Component: Main screen layout for your Home screen.
 // ==================================================================
 const HomeScreen = () => {
-  // Destructure currency from the CurrencyContext
-  const { currency, spendCurrency, resetCurrency } = useContext(CurrencyContext);
+  // Destructure currency functions from CurrencyContext (including the baseline saver)
+  const { currency, spendCurrency, resetCurrency, saveCurrencyAsBaseline } = useContext(CurrencyContext);
+  // State to control showing the payment animation
+  const [showPaymentAnimation, setShowPaymentAnimation] = useState(false);
+
+  // ====================================================================
+  // 1) Creating a reference for the purchase sound
+  // ====================================================================
+  const cashRegisterSoundRef = useRef(null);
+
+  // =================================
+  // 2) Loading the sound in a useEffect hook
+  // ==================================
+  useEffect(() =>{
+    async function setupPurchaseSound() {
+      try{
+        // setting audio mode
+        await Audio.setAudioModeAsync({
+          allowsRecordingIOS: false,
+          playsInSilentModeIOS: true,
+          shouldDuckAndroid: false,
+          staysActiveInBackground: true,
+          playThroughEarpieceAndroid: false,
+        });
+        // Unload if there's a previous sound loaded
+        if (cashRegisterSoundRef.current) {
+          await cashRegisterSoundRef.current.unloadAsync();
+        }
+        // Create a new Sound instance and load the cash register sound
+        cashRegisterSoundRef.current = new Audio.Sound();
+        await cashRegisterSoundRef.current.loadAsync(
+          require('../assets/sounds/cashregisterpurchase.mp3'),
+          { shouldPlay: false }
+        );
+          // Debugging purposes
+        console.log('Cash register sound loaded successfully');
+      } catch (error) {
+        console.error('Error setting up purchase sound:', error);
+      }
+    }
+
+    setupPurchaseSound();
+
+    // Cleanup function to unload sound when component unmounts
+    return () => {
+      if (cashRegisterSoundRef.current) {
+        cashRegisterSoundRef.current.unloadAsync();
+      }
+    };
+  }, []);
+
+  const playPurchaseSound = async () => {
+    if (cashRegisterSoundRef.current) {
+      try {
+        await cashRegisterSoundRef.current.setPositionAsync(0);
+        await cashRegisterSoundRef.current.playAsync();
+        console.log('Cash register sound played');
+      } catch (error) {
+        console.error('Error playing cash register sound:', error);
+      }
+    }
+  };
+
+  // Handler for purchase actions that displays the payment animation
+  const handlePurchase = (amount) => {
+    // Save the current currency as the baseline before spending
+    saveCurrencyAsBaseline();
+    // Spend the currency
+    spendCurrency(amount);
+    // Play the purchase sound
+    playPurchaseSound();
+    // Show the payment animation
+    setShowPaymentAnimation(true);
+    // Hide the animation after 2 seconds (adjust as needed)
+    setTimeout(() => setShowPaymentAnimation(false), 2000);
+  };
 
   return (
     // Main container: using global container style for consistent padding and background
     <View style={[GlobalStyles.container, styles.containerOverride]}>
       
-      {/* Header Text: Displays the screen title using local style overrides if needed */}
-      <Text style={styles.title}>Currency: {currency}</Text>
+      {/* Currency Display */}
+      <Text style={styles.title}>Dad Dollars: {currency}</Text>
       
-      {/* Button container: flex row, spaced apart */}
+      {/* Button container for purchases */}
       <View style={styles.buttonContainer}>
         <TouchableOpacity 
           style={GlobalStyles.button} 
-          onPress={() => spendCurrency(240)}
+          onPress={() => handlePurchase(240)}
         >
           <Text style={GlobalStyles.buttonText}>New Game: 240</Text>
         </TouchableOpacity>
 
         <TouchableOpacity 
           style={GlobalStyles.button} 
-          onPress={() => spendCurrency(10)}
+          onPress={() => handlePurchase(10)}
         >
           <Text style={GlobalStyles.buttonText}>New Book: 10</Text>
         </TouchableOpacity>
-
-      </View>
-   {/*  {__DEV__ && (
-      <View style={styles.resetButtonContainer}>
-
-      <TouchableOpacity 
+        <TouchableOpacity 
           style={GlobalStyles.button} 
-          onPress={resetCurrency}
+          onPress={() => handlePurchase(60)}
         >
-          <Text style={GlobalStyles.buttonText}>Reset</Text>
+          <Text style={GlobalStyles.buttonText}>New Gun: 60</Text>
         </TouchableOpacity>
-        </View>
-    )}
-    */}
+        <TouchableOpacity 
+          style={GlobalStyles.button} 
+          onPress={() => handlePurchase(120)}
+        >
+          <Text style={GlobalStyles.buttonText}>New Plushie Toy: 120</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={GlobalStyles.button} 
+          onPress={() => handlePurchase(240)}
+        >
+          <Text style={GlobalStyles.buttonText}>New Clothes: 240</Text>
+        </TouchableOpacity>
+      </View>
       
-      {/* Additional blocks can be added here. For instance, you could add buttons, images, or other components */}
+      {/* Optional manual reset button (currently shown in dev mode) */}
+      {__DEV__ && (
+        <View style={styles.resetButtonContainer}>
+          <TouchableOpacity style={GlobalStyles.button} onPress={resetCurrency}>
+            <Text style={GlobalStyles.buttonText}>Reset Currency</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Payment Animation Overlay */}
+      {showPaymentAnimation && (
+        <View style={styles.paymentAnimationContainer}>
+          <LottieView
+            source={require('../assets/animations/payment/paymentani/paymentani.json')}
+            autoPlay
+            loop={false}
+            style={styles.paymentAnimation}
+          />
+        </View>
+      )}
     </View>
   );
 };
@@ -58,42 +156,47 @@ const HomeScreen = () => {
 // Local Styles: Specific styles for HomeScreen to further customize layout
 // ==================================================================
 const styles = StyleSheet.create({
-  // Optional override for container if you need to adjust GlobalStyles.container
   containerOverride: {
     flex: 1,
-    padding: 20,            // Add some padding inside the container
-    margin: 10,             // Optional: margin outside the container
-    alignItems: 'center',     // Center items horizontally
-    // Here you can add any additional styling for the container specific to HomeScreen
+    padding: 20,
+    margin: 10,
+    alignItems: 'center',
   },
   title: {
-    // Local title style: larger and bold text for the header
-    fontSize: 28,
-    marginBottom: 10, // Adds spacing below the title
     fontFamily: 'DynaPuff-Bold',
     color: '#333',
-    fontSize: 50,
-  },
-  subtitle: {
-    // Local subtitle style: smaller text with a muted color
-    fontSize: 16,
-    color: '#555',
+    fontSize: 40,
+    marginBottom: 10,
   },
   buttonContainer: {
-    flexDirection: 'column',    // Lay out buttons side by side
+    flexDirection: 'column',
     justifyContent: 'space-between',
-    width: '50%',            // Optional: set a width to control button alignment
+    width: '50%',
     marginTop: 20,
     gap: 16,
   },
   resetButtonContainer: {
-    position: 'absolute', // Distance from the bottom edge
+    position: 'absolute',
     bottom: 30,
     left: 0,
     right: 0,
-    alignItems: 'center', // Centers horizontally
-
-  }
+    alignItems: 'center',
+  },
+  // Payment animation container: an overlay that centers the animation
+  paymentAnimationContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  paymentAnimation: {
+    width: 200,
+    height: 200,
+  },
 });
 
 export default HomeScreen;
