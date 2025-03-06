@@ -131,7 +131,7 @@ export function TaskManagerScreen() {
         </View>
 
         {/* Optional manual reset button for daily tasks */}
-        {__DEV__ && (
+          {__DEV__ && (
           <View style={localStyles.buttonContainer}>
             <TouchableOpacity style={GlobalStyles.button} onPress={resetDailyTasks}>
               <Text style={GlobalStyles.buttonText}>Reset Daily Tasks</Text>

@@ -129,7 +129,7 @@ const HomeScreen = () => {
       </View>
       
       {/* Optional manual reset button (currently shown in dev mode) */}
-      {__DEV__ && (
+        {__DEV__ && (
         <View style={styles.resetButtonContainer}>
           <TouchableOpacity style={GlobalStyles.button} onPress={resetCurrency}>
             <Text style={GlobalStyles.buttonText}>Reset Currency</Text>
