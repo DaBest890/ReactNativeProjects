@@ -9,19 +9,20 @@
     "web": "expo start --web"
   },
   "dependencies": {
-    "@lottiefiles/dotlottie-react": "^0.6.5",
-    "@react-native-async-storage/async-storage": "^2.1.2",
+    "@expo/config-plugins": "~9.0.0",
+    "@expo/prebuild-config": "~8.0.0",
+    "@react-native-async-storage/async-storage": "1.23.1",
     "@react-navigation/bottom-tabs": "^7.2.0",
     "@react-navigation/native": "^7.0.14",
     "expo": "~52.0.37",
-    "expo-app-loading": "^2.1.1",
-    "expo-av": "^15.0.2",
+    "expo-av": "~15.0.2",
+    "expo-dev-client": "~5.0.13",
     "expo-font": "~13.0.4",
+    "expo-splash-screen": "~0.29.22",
     "expo-status-bar": "^2.0.1",
     "lottie-react-native": "7.1.0",
     "react": "18.3.1",
     "react-native": "0.76.7",
-    "react-native-dev-menu": "^4.1.1",
     "react-native-gesture-handler": "~2.20.2",
     "react-native-paper": "^5.13.1",
     "react-native-reanimated": "~3.16.1",
@@ -30,7 +31,10 @@
     "react-native-vector-icons": "^10.2.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0"
+    "@babel/core": "^7.20.0",
+    "@expo/config-plugins": "~9.0.0",
+    "@expo/prebuild-config": "~8.0.0",
+    "expo-module-scripts": "^4.0.4"
   },
   "private": true
 }

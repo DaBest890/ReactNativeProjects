@@ -5,27 +5,15 @@ import GlobalStyles from '../styles/GlobalStyles';
 import { CurrencyContext } from '../context/CurrencyContext';
 import { Audio } from 'expo-av'; // For audio sounds
 
-// ==================================================================
-// HomeScreen Component: Main screen layout for your Home screen.
-// ==================================================================
 const HomeScreen = () => {
-  // Destructure currency functions from CurrencyContext (including the baseline saver)
   const { currency, spendCurrency, resetCurrency, saveCurrencyAsBaseline } = useContext(CurrencyContext);
-  // State to control showing the payment animation
   const [showPaymentAnimation, setShowPaymentAnimation] = useState(false);
-
-  // ====================================================================
-  // 1) Creating a reference for the purchase sound
-  // ====================================================================
   const cashRegisterSoundRef = useRef(null);
 
-  // =================================
-  // 2) Loading the sound in a useEffect hook
-  // ==================================
-  useEffect(() =>{
+  useEffect(() => {
     async function setupPurchaseSound() {
-      try{
-        // setting audio mode
+      try {
+        console.log('Setting up purchase sound...');
         await Audio.setAudioModeAsync({
           allowsRecordingIOS: false,
           playsInSilentModeIOS: true,
@@ -33,18 +21,20 @@ const HomeScreen = () => {
           staysActiveInBackground: true,
           playThroughEarpieceAndroid: false,
         });
-        // Unload if there's a previous sound loaded
+
         if (cashRegisterSoundRef.current) {
+          console.log('Unloading previous sound...');
           await cashRegisterSoundRef.current.unloadAsync();
         }
-        // Create a new Sound instance and load the cash register sound
+
         cashRegisterSoundRef.current = new Audio.Sound();
+        console.log('Loading cash register sound...');
         await cashRegisterSoundRef.current.loadAsync(
           require('../assets/sounds/cashregisterpurchase.mp3'),
           { shouldPlay: false }
         );
-          // Debugging purposes
-        console.log('Cash register sound loaded successfully');
+
+        console.log('Cash register sound loaded successfully.');
       } catch (error) {
         console.error('Error setting up purchase sound:', error);
       }
@@ -52,9 +42,9 @@ const HomeScreen = () => {
 
     setupPurchaseSound();
 
-    // Cleanup function to unload sound when component unmounts
     return () => {
       if (cashRegisterSoundRef.current) {
+        console.log('Unloading cash register sound on unmount...');
         cashRegisterSoundRef.current.unloadAsync();
       }
     };
@@ -63,81 +53,57 @@ const HomeScreen = () => {
   const playPurchaseSound = async () => {
     if (cashRegisterSoundRef.current) {
       try {
+        console.log('Attempting to play purchase sound...');
         await cashRegisterSoundRef.current.setPositionAsync(0);
         await cashRegisterSoundRef.current.playAsync();
-        console.log('Cash register sound played');
+        console.log('Cash register sound played successfully.');
       } catch (error) {
         console.error('Error playing cash register sound:', error);
       }
+    } else {
+      console.error('Error: Sound reference is null, sound not loaded.');
     }
   };
 
-  // Handler for purchase actions that displays the payment animation
   const handlePurchase = (amount) => {
-    // Save the current currency as the baseline before spending
+    console.log(`Attempting to purchase item for ${amount} Dad Dollars...`);
     saveCurrencyAsBaseline();
-    // Spend the currency
     spendCurrency(amount);
-    // Play the purchase sound
     playPurchaseSound();
-    // Show the payment animation
     setShowPaymentAnimation(true);
-    // Hide the animation after 2 seconds (adjust as needed)
     setTimeout(() => setShowPaymentAnimation(false), 2000);
   };
 
   return (
-    // Main container: using global container style for consistent padding and background
     <View style={[GlobalStyles.container, styles.containerOverride]}>
-      
-      {/* Currency Display */}
       <Text style={styles.title}>Dad Dollars: {currency}</Text>
-      
-      {/* Button container for purchases */}
       <View style={styles.buttonContainer}>
-        <TouchableOpacity 
-          style={GlobalStyles.button} 
-          onPress={() => handlePurchase(240)}
-        >
+        <TouchableOpacity style={GlobalStyles.button} onPress={() => handlePurchase(240)}>
           <Text style={GlobalStyles.buttonText}>New Game: 240</Text>
         </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={GlobalStyles.button} 
-          onPress={() => handlePurchase(10)}
-        >
+        <TouchableOpacity style={GlobalStyles.button} onPress={() => handlePurchase(10)}>
           <Text style={GlobalStyles.buttonText}>New Book: 10</Text>
         </TouchableOpacity>
-        <TouchableOpacity 
-          style={GlobalStyles.button} 
-          onPress={() => handlePurchase(60)}
-        >
+        <TouchableOpacity style={GlobalStyles.button} onPress={() => handlePurchase(60)}>
           <Text style={GlobalStyles.buttonText}>New Gun: 60</Text>
         </TouchableOpacity>
-        <TouchableOpacity 
-          style={GlobalStyles.button} 
-          onPress={() => handlePurchase(120)}
-        >
+        <TouchableOpacity style={GlobalStyles.button} onPress={() => handlePurchase(120)}>
           <Text style={GlobalStyles.buttonText}>New Plushie Toy: 120</Text>
         </TouchableOpacity>
-        <TouchableOpacity 
-          style={GlobalStyles.button} 
-          onPress={() => handlePurchase(240)}
-        >
+        <TouchableOpacity style={GlobalStyles.button} onPress={() => handlePurchase(240)}>
           <Text style={GlobalStyles.buttonText}>New Clothes: 240</Text>
         </TouchableOpacity>
+        <TouchableOpacity style={GlobalStyles.button} onPress={() => handlePurchase(30)}>
+          <Text style={GlobalStyles.buttonText}>30 More Minutes: 30</Text>
+        </TouchableOpacity>
       </View>
-      
-      {/* Optional manual reset button (currently shown in dev mode) */}
-        {__DEV__ && (
+
         <View style={styles.resetButtonContainer}>
           <TouchableOpacity style={GlobalStyles.button} onPress={resetCurrency}>
             <Text style={GlobalStyles.buttonText}>Reset Currency</Text>
           </TouchableOpacity>
         </View>
-      )}
 
-      {/* Payment Animation Overlay */}
       {showPaymentAnimation && (
         <View style={styles.paymentAnimationContainer}>
           <LottieView
@@ -152,9 +118,6 @@ const HomeScreen = () => {
   );
 };
 
-// ==================================================================
-// Local Styles: Specific styles for HomeScreen to further customize layout
-// ==================================================================
 const styles = StyleSheet.create({
   containerOverride: {
     flex: 1,
@@ -182,7 +145,6 @@ const styles = StyleSheet.create({
     right: 0,
     alignItems: 'center',
   },
-  // Payment animation container: an overlay that centers the animation
   paymentAnimationContainer: {
     position: 'absolute',
     top: 0,

@@ -1,6 +1,7 @@
 {
-    "compilerOptions": {
-      "checkJs": false
-    }
-  }
-  
+  "compilerOptions": {
+    "checkJs": false,
+    "types": ["node"]
+  },
+  "exclude": ["node_modules", "jest"]
+}
